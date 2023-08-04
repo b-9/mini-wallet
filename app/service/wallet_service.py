@@ -13,9 +13,7 @@ from fastapi.exceptions import HTTPException
 async def activate_wallet(token):
     data = await _activate_wallet(token)
     if data[1] == "0":
-        raise HTTPException(
-            400, detail={"status": "fail", "data": {"error": "Already enabled"}}
-        )
+        raise HTTPException(400, detail={"error": "Already enabled"})
 
     data = await _fetch_wallet_data_by_token(token)
     data = wallet_info_mapper(data)
@@ -25,9 +23,7 @@ async def activate_wallet(token):
 async def disable_wallet(token):
     data = await _disable_wallet(token)
     if data[1] == "0":
-        raise HTTPException(
-            400, detail={"status": "fail", "data": {"error": "Already disabled"}}
-        )
+        raise HTTPException(400, detail={"error": "Already disabled"})
     data = await _fetch_wallet_data_by_token(token)
     data = wallet_info_mapper(data)
     return {"wallet": data}
@@ -36,9 +32,7 @@ async def disable_wallet(token):
 async def get_wallet_details(token):
     data = await _fetch_wallet_data_by_token(token)
     if data["status"] == "disabled":
-        raise HTTPException(
-            404, detail={"status": "fail", "data": {"error": "Wallet disabled"}}
-        )
+        raise HTTPException(404, detail={"error": "Wallet disabled"})
     data = wallet_info_mapper(data)
     return {"wallet": data}
 
@@ -46,39 +40,34 @@ async def get_wallet_details(token):
 async def make_deposits(token, amount, reference_id):
     data = await _fetch_wallet_data_by_token(token)
     if data["status"] == "disabled":
-        raise HTTPException(
-            404, detail={"status": "fail", "data": {"error": "Wallet disabled"}}
-        )
+        raise HTTPException(404, detail={"error": "Wallet disabled"})
     data = await _add_funds(data["customer_id"], data["id"], amount, reference_id)
+    return {"deposit": data}
 
 
 async def use_wallet(token, amount, reference_id):
     data = await _fetch_wallet_data_by_token(token)
     if data["status"] == "disabled":
-        raise HTTPException(
-            404, detail={"status": "fail", "data": {"error": "Wallet disabled"}}
-        )
+        raise HTTPException(404, detail={"error": "Wallet disabled"})
     if data["balance"] < amount:
         data = await _spend_funds(
             data["customer_id"], data["id"], amount, reference_id, "failed"
         )
         raise HTTPException(
             422,
-            detail={"message": "funds are not avaliable to complete this transaction"},
+            detail={"error": "funds are not avaliable to complete this transaction"},
         )
 
     data = await _spend_funds(
         data["customer_id"], data["id"], amount, reference_id, "success"
     )
-    return data
+    return {"withdrawal": data}
 
 
 async def get_transactions(token):
     data = await _fetch_wallet_data_by_token(token)
     if data["status"] == "disabled":
-        raise HTTPException(
-            404, detail={"status": "fail", "data": {"error": "Wallet disabled"}}
-        )
+        raise HTTPException(404, detail={"error": "Wallet disabled"})
     result = await _get_transactions(wallet_id=data["id"])
     result = transactions_mapper(result)
     return {"transactions": result}

@@ -18,7 +18,7 @@ async def startup_proccess():
 
 @app.exception_handler(HTTPException)
 async def error_http_middleware(request, exe):
-    return response_handler(exe.status_code, data=exe.detail, status="failed")
+    return response_handler(exe.status_code, data=exe.detail, status="fail")
 
 
 @app.post(f"{BASE_ROUTER}/api/v1/init")

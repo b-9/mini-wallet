@@ -3,7 +3,7 @@ import os
 
 load_dotenv()
 
-BASE_ROUTER = os.getenv("BASE_ROUTER","")
+BASE_ROUTER = os.getenv("BASE_ROUTER", "")
 
 DB_USER = os.environ["DB_USER"]
 DB_NAME = os.environ["DB_NAME"]

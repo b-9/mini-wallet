@@ -6,8 +6,6 @@ async def get_token(authorization):
     try:
         token_object = Token(authorization=authorization)
     except ValueError as ve:
-        raise HTTPException(
-            400, detail={"success": False, "message": "Not a valid token format"}
-        )
+        raise HTTPException(400, detail={"error": "Not a valid token format"})
     token = token_object.authorization
     return token

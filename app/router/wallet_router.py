@@ -63,7 +63,7 @@ async def disable_wallet(
     token = await get_token(authorization)
     if is_disabled == False:
         raise HTTPException(
-            400, detail={"message": "bad request only disable option is avalible"}
+            400, detail={"error": "bad request only disable option is avalible"}
         )
     data = await _disable_wallet(token)
     return response_handler(status_code=201, data=data)

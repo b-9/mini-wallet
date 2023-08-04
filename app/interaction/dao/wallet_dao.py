@@ -22,7 +22,7 @@ async def create_wallet(customer_xid):
         return {"token": token_id}
     except Exception as e:
         logger.exception(e)
-        raise HTTPException(500, detail={"message": "database error"})
+        raise HTTPException(500, detail={"error": "database error"})
 
 
 async def fetch_wallet_token_by_customer_xid(customer_xid):
@@ -39,7 +39,7 @@ async def fetch_wallet_token_by_customer_xid(customer_xid):
         return {}
     except Exception as e:
         logger.exception(e)
-        raise HTTPException(500, detail={"message": "database error"})
+        raise HTTPException(500, detail={"error": "database error"})
 
 
 async def activate_wallet(token):
@@ -57,7 +57,7 @@ async def activate_wallet(token):
         return data
     except Exception as e:
         logger.exception(e)
-        raise HTTPException(500, detail={"message": "database error"})
+        raise HTTPException(500, detail={"error": "database error"})
 
 
 async def fetch_wallet_data_by_token(token):
@@ -74,7 +74,7 @@ async def fetch_wallet_data_by_token(token):
         return {}
     except Exception as e:
         logger.exception(e)
-        raise HTTPException(500, detail={"message": "database error"})
+        raise HTTPException(500, detail={"error": "database error"})
 
 
 async def disable_wallet(token):
@@ -92,7 +92,7 @@ async def disable_wallet(token):
         return data
     except Exception as e:
         logger.exception(e)
-        raise HTTPException(500, detail={"message": "database error"})
+        raise HTTPException(500, detail={"error": "database error"})
 
 
 async def add_funds(customer_id, wallet_id, amount, reference_id):
@@ -114,15 +114,22 @@ async def add_funds(customer_id, wallet_id, amount, reference_id):
             )
         except UniqueViolationError as exe:
             raise HTTPException(
-                400, detail={"message": "reference and type is not unique "}
+                400, detail={"error": "reference and type is not unique "}
             )
 
-        return {"id": transaction_id}
+        return {
+            "id": transaction_id,
+            "deposited_by": customer_id,
+            "status": "success",
+            "deposited_at": time,
+            "amount": amount,
+            "reference_id": reference_id,
+        }
     except HTTPException as e:
         raise e
     except Exception as e:
         logger.exception(e)
-        raise HTTPException(500, detail={"message": "database error"})
+        raise HTTPException(500, detail={"error": "database error"})
 
 
 async def spend_funds(customer_id, wallet_id, amount, reference_id, status):
@@ -146,15 +153,22 @@ async def spend_funds(customer_id, wallet_id, amount, reference_id, status):
 
         except UniqueViolationError as exe:
             raise HTTPException(
-                400, detail={"message": "reference and type is not unique "}
+                400, detail={"error": "reference and type is not unique "}
             )
 
-        return {"id": transaction_id}
+        return {
+            "id": transaction_id,
+            "deposited_by": customer_id,
+            "status": status,
+            "deposited_at": time,
+            "amount": amount,
+            "reference_id": reference_id,
+        }
     except HTTPException as e:
         raise e
     except Exception as e:
         logger.exception(e)
-        raise HTTPException(500, detail={"message": "database error"})
+        raise HTTPException(500, detail={"error": "database error"})
 
 
 async def get_transactions(wallet_id):
@@ -172,4 +186,4 @@ async def get_transactions(wallet_id):
         return result
     except Exception as e:
         logger.exception(e)
-        raise HTTPException(500, detail={"message": "database error"})
+        raise HTTPException(500, detail={"error": "database error"})
