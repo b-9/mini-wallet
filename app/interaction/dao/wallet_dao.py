@@ -15,8 +15,8 @@ async def create_wallet(customer_xid):
 
         data = await sql_db.execute(
             f"""
-                                  insert into wallets (id,balance,token,customer_id,status,created_at) 
-                                  values('{wallet_id}',0.00,'{token_id}','{customer_xid}','disabled','{time}');"""
+                INSERT INTO wallets (id,balance,token,customer_id,status,created_at) 
+                VALUES ('{wallet_id}',0.00,'{token_id}','{customer_xid}','disabled','{time}');"""
         )
 
         return {"token": token_id}
@@ -66,7 +66,7 @@ async def fetch_wallet_data_by_token(token):
 
         data = await sql_db.fetch(
             f"""
-                                  select * from wallets where token = '{token}';"""
+                                  select id,balance,token,customer_id,status,created_at,enabled_at,updated_at from wallets where token = '{token}';"""
         )
 
         if len(data):
@@ -85,8 +85,10 @@ async def disable_wallet(token):
 
         data = await sql_db.execute(
             f"""
-                                  update  wallets set status='disabled' ,updated_at='{time}' 
-                                  where token='{token}' and status='enabled';"""
+                UPDATE  wallets 
+                SET status='disabled' ,updated_at='{time}' 
+                WHERE token='{token}' 
+                    AND status='enabled';"""
         )
         data = data.split(" ")
         return data
@@ -105,14 +107,16 @@ async def add_funds(customer_id, wallet_id, amount, reference_id):
             data = await sql_db.execute(
                 f"""
                         
-                update wallets set updated_at='{time}', balance=balance + {amount} 
-                where customer_id='{customer_id}';
-                insert into transactions (id,wallet_id,created_at,type,reference_id,amount,status)
-                values('{transaction_id}','{wallet_id}','{time}','deposit','{reference_id}',{amount},'success');               
+                UPDATE wallets 
+                SET updated_at='{time}', balance=balance + {amount} 
+                WHERE customer_id='{customer_id}';
+                INSERT INTO transactions (id,wallet_id,created_at,type,reference_id,amount,status)
+                VALUES('{transaction_id}','{wallet_id}','{time}','deposit','{reference_id}',{amount},'success');               
 
             """
             )
         except UniqueViolationError as exe:
+            logger.exception(exe)
             raise HTTPException(
                 400, detail={"error": "reference and type is not unique "}
             )
@@ -126,6 +130,7 @@ async def add_funds(customer_id, wallet_id, amount, reference_id):
             "reference_id": reference_id,
         }
     except HTTPException as e:
+        logger.exception(e)
         raise e
     except Exception as e:
         logger.exception(e)
@@ -141,13 +146,14 @@ async def spend_funds(customer_id, wallet_id, amount, reference_id, status):
         try:
             sub_query = ""
             if status == "success":
-                sub_query = f"""update wallets set updated_at='{time}', balance=balance - {amount} 
-                                   where customer_id='{customer_id}';"""
+                sub_query = f"""UPDATE wallets 
+                                SET updated_at='{time}', balance=balance - {amount} 
+                                WHERE customer_id='{customer_id}';"""
             query = f"""
 
                 {sub_query}
-                insert into transactions (id,wallet_id,created_at,type,reference_id,amount,status)
-                                    values('{transaction_id}','{wallet_id}','{time}','withdrawal','{reference_id}',{amount},'{status}');               
+                INSERT INTO transactions (id,wallet_id,created_at,type,reference_id,amount,status)
+                VALUES('{transaction_id}','{wallet_id}','{time}','withdrawal','{reference_id}',{amount},'{status}');               
             """
             data = await sql_db.execute(query)
 
@@ -177,7 +183,7 @@ async def get_transactions(wallet_id):
 
         data = await sql_db.fetch(
             f"""
-                select * from transactions where wallet_id = '{wallet_id}' order by created_at desc ;"""
+                select id,wallet_id,created_at,type,reference_id,status,amount from transactions where wallet_id = '{wallet_id}' order by created_at desc ;"""
         )
         result = []
         for row in data:
