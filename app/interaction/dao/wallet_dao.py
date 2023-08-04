@@ -31,7 +31,9 @@ async def fetch_wallet_token_by_customer_xid(customer_xid):
 
         data = await sql_db.fetch(
             f"""
-                                  select token from wallets where customer_id = '{customer_xid}';"""
+                SELECT token 
+                FROM wallets 
+                WHERE customer_id = '{customer_xid}';"""
         )
 
         if len(data):
@@ -50,8 +52,9 @@ async def activate_wallet(token):
 
         data = await sql_db.execute(
             f"""
-                                  update  wallets set status='enabled' ,enabled_at='{time}',updated_at='{time}' 
-                                  where token='{token}' and status='disabled';"""
+                UPDATE  wallets 
+                SET status='enabled' ,enabled_at='{time}',updated_at='{time}' 
+                WHERE token='{token}' AND status='disabled';"""
         )
         data = data.split(" ")
         return data
@@ -66,7 +69,9 @@ async def fetch_wallet_data_by_token(token):
 
         data = await sql_db.fetch(
             f"""
-                                  select id,balance,token,customer_id,status,created_at,enabled_at,updated_at from wallets where token = '{token}';"""
+                SELECT id,balance,token,customer_id,status,created_at,enabled_at,updated_at 
+                FROM wallets 
+                WHERE token = '{token}';"""
         )
 
         if len(data):
@@ -183,7 +188,10 @@ async def get_transactions(wallet_id):
 
         data = await sql_db.fetch(
             f"""
-                select id,wallet_id,created_at,type,reference_id,status,amount from transactions where wallet_id = '{wallet_id}' order by created_at desc ;"""
+                SELECT id,wallet_id,created_at,type,reference_id,status,amount 
+                FROM transactions 
+                WHERE wallet_id = '{wallet_id}' 
+                ORDER BY created_at DESC ;"""
         )
         result = []
         for row in data:
