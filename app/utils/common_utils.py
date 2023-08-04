@@ -1,9 +1,5 @@
 from app.model.common_model import Token
 from fastapi.exceptions import HTTPException
-import logging
-from datetime import time
-import os
-import inspect
 
 
 async def get_token(authorization):
@@ -13,6 +9,3 @@ async def get_token(authorization):
         raise HTTPException(400, detail={"error": "Not a valid token format"})
     token = token_object.authorization
     return token
-
- 
-  
